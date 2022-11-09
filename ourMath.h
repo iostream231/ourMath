@@ -90,6 +90,13 @@ float det2(mat2 data, float * det2) {
     
 }
 
+/**
+ * @brief Calculates the Determinenet of a 3D Column-Majored Matrix;
+ * 
+ * @param data The 3x3 Column-Majored Matrix that its data is to be calculated
+ * @param det3 A Pointer to a float value where the determinent is to be saved. Can be NULL if not necessary.
+ * @return float Returns The Determinant
+ */
 float det3(mat3 data, float * det3) {
     mat2 matrix1 = {
         {data[1][1], data[1][2]},
@@ -104,15 +111,33 @@ float det3(mat3 data, float * det3) {
         {data[2][0], data[2][1]}
     };
 
-    return (det3 != NULL) ? (*det3 = det2(matrix1, NULL) + det2(matrix2, NULL) + det2(matrix3, NULL)) \
-    :  det2(matrix1, NULL) + det2(matrix2, NULL) + det2(matrix3, NULL);
+    return (det3 != NULL) ? (*det3 = data[0][0]*det2(matrix1, NULL) - data[0][1]*  det2(matrix2, NULL) + data[0][2]*  det2(matrix3, NULL)) \
+    :  data[0][0]*det2(matrix1, NULL) - data[0][1] * det2(matrix2, NULL) + data[0][2] * det2(matrix3, NULL);
 }
 
 
-// float det3(mat3 data, float * det3) {
-    
-//     return (data[1][1] * data[2][2] - data[1][2] * data[2][1]) + \
-//             (data[1][0] * data[2][2] - data[1][2] * data[2][0]) + \
-//             (data[1][0])
-// }
 
+// * Supposed to be a mpre optimized function, but clearly has no effect.
+// float det3Opt(mat3 data, float * det3) {
+//     return (det3 != NULL) ? (*det3 = (data[0][0] * (data[1][1] * data[2][2] - data[1][2] * data[2][1])) \
+//         - (data[0][1] * (data[1][1] * data[2][2] - data[1][2] * data[2][0])\
+//         + (data[0][2] * (data[1][0] * data[2][1] - data[1][1] * data[2][0])))) : \
+//         (data[0][0] * (data[1][1] * data[2][2] - data[1][2] * data[2][1])) \
+//         - (data[0][1] * (data[1][1] * data[2][2] - data[1][2] * data[2][0])\
+//         + (data[0][2] * (data[1][0] * data[2][1] - data[1][1] * data[2][0])));
+
+// } 
+
+
+
+void printMatrix3(mat3 data) {
+    for(size_t c = 0; c < 3; ++c) {
+        printf("[ ");
+
+        for(size_t r = 0; r < 3; ++r)
+            printf("%.2f, ", data[c][r]);
+        
+        printf(" ]");
+        putchar('\n');
+    }
+}
