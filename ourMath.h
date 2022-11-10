@@ -6,6 +6,14 @@ typedef float mat4[4][4];
 typedef float mat2[2][2];
 
 
+void translate4(mat4 data, float x, float y, float z);
+void scale4(mat4 data, float x, float y, float z);
+void multiply4(mat4 , mat4, mat4);
+void printMatrix3(mat3);
+float det2(mat2, float *);
+float det3(mat3, float *);
+
+
 /**
  * @name Translate Matrix
  * @brief Generates A Translation Matrix And Stores It In `data`, the generated matrix is in row-major order, therefor `transpose` in glUniformMatrix...() must be GL_TRUE
@@ -129,6 +137,34 @@ float det3(mat3 data, float * det3) {
 // } 
 
 
+float det4(mat4 data, float * det4){ 
+    mat3 matrix1 = {
+        {data[1][1], data[1][2], data[1][3]},
+        {data[2][1], data[2][2], data[2][3]},
+        {data[3][1], data[3][2], data[3][3]}
+    };
+
+    mat3 matrix2 = {
+        {data[1][0], data[1][2], data[1][3]},
+        {data[2][0], data[2][2], data[2][3]},
+        {data[3][0], data[3][2], data[3][3]}
+    };
+    
+    mat3 matrix3 = {
+        {data[1][0], data[1][1], data[1][3]},
+        {data[2][0], data[2][1], data[2][3]},
+        {data[3][0], data[3][1], data[3][3]}
+    };
+
+    mat3 matrix4 = {
+        {data[1][0], data[1][1], data[1][2]},
+        {data[2][0], data[2][1], data[2][2]},
+        {data[3][0], data[3][1], data[3][2]}
+    };
+
+    return (det4 != NULL) ? (*det4 = data[0][0]*det3(matrix1, NULL) - data[0][1]*det3(matrix2, NULL) + data[0][2]*det3(matrix3, NULL) - data[0][3]*det3(matrix4, NULL)) \
+    : (data[0][0]*det3(matrix1, NULL) - data[0][1]*det3(matrix2, NULL) + data[0][2]*det3(matrix3, NULL) - data[0][3]*det3(matrix4, NULL));
+}
 
 void printMatrix3(mat3 data) {
     for(size_t c = 0; c < 3; ++c) {
@@ -141,3 +177,5 @@ void printMatrix3(mat3 data) {
         putchar('\n');
     }
 }
+
+
