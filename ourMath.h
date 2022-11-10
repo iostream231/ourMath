@@ -1,20 +1,24 @@
 # include <stdio.h>
+# include <stdarg.h>
 
 
 typedef float mat3[3][3]; // Matrices Type
 typedef float mat4[4][4];
 typedef float mat2[2][2];
 
+enum type {MAT2, MAT3, MAT4};
+
 
 void translate4(mat4 data, float x, float y, float z);
 void scale4(mat4 data, float x, float y, float z);
 void transpose4(mat4 data, mat4);
 void multiply4(mat4 , mat4, mat4);
-void printMatrix3(mat3);
-void printMatrix4(mat4);
+
 float det2(mat2, float *);
 float det3(mat3, float *);
 
+
+void printMatrix(enum type , ...);
 
 
 /**
@@ -299,31 +303,60 @@ void transpose4(mat4 data, mat4 res) {
 }
 
 /**
- * @brief Prints A 3x3 Matrix Into The Terminal
+ * @brief Prints A User-Specified Matrix.
  * 
- * @param data The Matrix To be read.
+ * @param tp The Type Of The Matrix. Current Supported Types Are MAT2, MAT3 and MAT4.
+ * @param ... the matrix to be printed.
  */
-void printMatrix3(mat3 data) {
-    for(size_t c = 0; c < 3; ++c) {
-        printf("[ ");
+void printMatrix(enum type tp, ...) {
+    va_list arg;
 
-        for(size_t r = 0; r < 3; ++r)
-            printf("%.2f, ", data[c][r]);
-        
-        printf(" ]");
-        putchar('\n');
+    va_start(arg, tp);
+
+    mat2 * matrix2;
+    mat3 * matrix3;
+    mat4 * matrix4;
+
+    switch(tp) {
+        case MAT2 :
+            matrix2 = va_arg(arg, float*);
+            for(size_t i = 0; i < 2; ++i) {
+                printf("[ ");
+                for(size_t j = 0; j < 2; ++j) {
+                    printf("%.4f, ", (*matrix2)[i][j]);
+                }
+                printf(" ]");
+                putchar('\n');
+            }
+            break;
+        case MAT3 :
+            matrix3 = va_arg(arg, float*);
+            for(size_t i = 0; i < 3; ++i) {
+                printf("[ ");
+                for(size_t j = 0; j < 3; ++j) {
+                    printf("%.4f, ", (*matrix3)[i][j]);
+                }
+                printf(" ]");
+                putchar('\n');
+            }
+            break;
+        case MAT4 :
+            matrix4 = va_arg(arg, float*);
+            for(size_t i = 0; i < 4; ++i) {
+                printf("[ ");
+                for(size_t j = 0; j < 4; ++j) {
+                    printf("%.4f, ", (*matrix4)[i][j]);
+                }
+                printf(" ]");
+                putchar('\n');
+            }
+            break;
+        default :
+            perror("Unsupported Type :( \n");
+            exit(EXIT_FAILURE);
     }
-}
 
 
-void printMatrix4(mat4 data) {
-    for(size_t c = 0; c < 4; ++c) {
-        printf("[ ");
 
-        for(size_t r = 0; r < 4; ++r)
-            printf("%.2f, ", data[c][r]);
-        
-        printf(" ]");
-        putchar('\n');
-    }
+    va_end(arg);
 }
