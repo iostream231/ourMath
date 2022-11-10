@@ -8,10 +8,13 @@ typedef float mat2[2][2];
 
 void translate4(mat4 data, float x, float y, float z);
 void scale4(mat4 data, float x, float y, float z);
+void transpose4(mat4 data, mat4);
 void multiply4(mat4 , mat4, mat4);
 void printMatrix3(mat3);
+void printMatrix4(mat4);
 float det2(mat2, float *);
 float det3(mat3, float *);
+
 
 
 /**
@@ -136,6 +139,13 @@ float det3(mat3 data, float * det3) {
 
 // } 
 
+/**
+ * @brief Calculates The Determinent of a 4x4 Matrix. (In A Column-Major order)
+ * 
+ * @param data The Matrix that's data is to be calculated.
+ * @param det4 A Pointer If You want to store the data. Can Be NULL.
+ * @return float The determinent.
+ */
 
 float det4(mat4 data, float * det4){ 
     mat3 matrix1 = {
@@ -166,6 +176,133 @@ float det4(mat4 data, float * det4){
     : (data[0][0]*det3(matrix1, NULL) - data[0][1]*det3(matrix2, NULL) + data[0][2]*det3(matrix3, NULL) - data[0][3]*det3(matrix4, NULL));
 }
 
+/**
+ * @brief Removes An Index From A List of Indices. Used Specifically to calculate Adjunts of a matrix (Remove i-th row / j-th column)
+ * 
+ * @param lst The List Of Indices To Remove The Index From
+ * @param ind The Index Of The Index To Be Removed.
+ * @param sz the Size of the original List
+ * @return char* A List With The Index Specified Removed.
+ */
+char * remIndFromLst(char lst[], uint ind, uint sz) {
+    char * res = malloc((sz - 1) * sizeof(char));
+    for(size_t i = 0, j = 0; j < sz-1 && sz; ++i)
+        if(i == ind) 
+            continue;
+        else 
+            res[j++] = lst[i];
+        
+    return res;
+
+}
+
+
+/**
+ * @brief Calculates The Adjunct of A matrix and stores it in Res.
+ * 
+ * @param res The Matrix Where The Adjunct is to be stored.
+ * @param data The Matrix That's Adjunct is to be calculated.
+ */
+void adjugate(mat4 res, mat4 data) {
+
+    char indices[4] = {0, 1, 2, 3};
+
+    for(size_t i = 0; i < 4; ++i) {
+        char * Cdices = remIndFromLst(indices, i, 4);
+
+        for(size_t j = 0; j < 4; ++j) {
+            char * Rdices = remIndFromLst(indices,j, 4);
+            mat3 matrix = {
+                { data[Cdices[0]][Rdices[0]], data[Cdices[0]][Rdices[1]], data[Cdices[0]][Rdices[2]] },
+                { data[Cdices[1]][Rdices[0]], data[Cdices[1]][Rdices[1]], data[Cdices[1]][Rdices[2]] },
+                { data[Cdices[2]][Rdices[0]], data[Cdices[2]][Rdices[1]], data[Cdices[2]][Rdices[2]] }
+            };
+
+            res[i][j] = (i + j) % 2 == 0 ? det3(matrix, NULL) : -det3(matrix, NULL);
+
+        }
+    }
+    transpose4(res, NULL);
+}
+
+/**
+ * @brief Multiplies A 4x4 Matrix By A Value f, and Optionally Stores The Result in res.
+ * 
+ * @param data The Matrix to be multiplied, if you want it to be conserved pass another Matrix As Res.
+ * @param f the value to multiply the matrix by.
+ * @param res Optional (Can Be NULL), if you want data to not change you can store the results in another independent matrix by passing it here.
+ */
+void multiply4f(mat4 data, float f, mat4 res) {
+    if(res == NULL) 
+        for(size_t i = 0; i < 4; ++i) 
+            for(size_t j = 0; j < 4; ++j)
+                data[i][j] *= f;
+
+    else 
+        for(size_t i = 0; i < 4; ++i) 
+            for(size_t j = 0; j < 4; ++j)
+                res[i][j] = data[i][j] * f;
+}
+
+
+/**
+ * @brief Copies Data From One 4x4 Matrix Into Another 4x4 Matrix
+ * 
+ * @param from The 4D Matrix to be copied from.
+ * @param to The 4D Matrix To be copied to.
+ */
+void copy4t4(mat4 from, mat4 to) {
+    for(size_t i = 0; i < 4; ++i) 
+        for(size_t j = 0; j < 4; ++j)
+            to[i][j] = from[i][j];
+    
+}
+
+
+/**
+ * @brief Calculates The Inverse of a matrix, and (Optionally) stores it in another one.
+ * 
+ * @param data The Matrix That's Inverse Is To Be Calculated
+ * @param res Where To Store the Inversed matrix, if not specified `data` will be changed to store the inversed matrix
+ */
+void inverse4(mat4 data, mat4 res) {
+    mat4 adj = {.0f};
+    adjugate(adj, data);
+
+    
+    multiply4f(adj, (1.0f / det4(data, NULL)), NULL);
+
+    if(res != NULL) 
+        copy4t4(adj, res);
+    else 
+        copy4t4(adj, data);
+}
+
+/**
+ * @brief Transposes A 4x4 Matrix : Switches Its Order. And Strores The Results (Optionally) In a Result Matrix.
+ * 
+ * @param data The Matrix To Be Transposed, if you dont want to Modify it you need to specify a `res` matrix where transposed data is to be stored.
+ * @param res The Result Matrix Where The Transposed Matrix is to be stored. If specified as NULL, the main matrix is modified
+ */
+void transpose4(mat4 data, mat4 res) {
+    if(res == NULL) {
+        mat4 matx = {.0f};
+        for(size_t i = 0; i < 4; ++i) 
+            for(size_t j = 0; j < 4; ++j)
+                matx[j][i] = data[i][j];
+        copy4t4(matx, data);
+        return ;
+    } else 
+        for(size_t i = 0; i < 4; ++i) 
+            for(size_t j = 0; j < 4; ++j)
+                res[j][i] = data[i][j];
+}
+
+/**
+ * @brief Prints A 3x3 Matrix Into The Terminal
+ * 
+ * @param data The Matrix To be read.
+ */
 void printMatrix3(mat3 data) {
     for(size_t c = 0; c < 3; ++c) {
         printf("[ ");
@@ -179,3 +316,14 @@ void printMatrix3(mat3 data) {
 }
 
 
+void printMatrix4(mat4 data) {
+    for(size_t c = 0; c < 4; ++c) {
+        printf("[ ");
+
+        for(size_t r = 0; r < 4; ++r)
+            printf("%.2f, ", data[c][r]);
+        
+        printf(" ]");
+        putchar('\n');
+    }
+}
