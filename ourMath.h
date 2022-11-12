@@ -6,13 +6,23 @@ typedef float mat3[3][3]; // Matrices Type
 typedef float mat4[4][4];
 typedef float mat2[2][2];
 
-enum type {MAT2, MAT3, MAT4};
+typedef float vec2[2];
+typedef float vec3[3];
+typedef float vec4[4];
+
+enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
 
 
-void translate4(mat4 data, float x, float y, float z);
-void scale4(mat4 data, float x, float y, float z);
+void omGentranslate4(mat4 data, float x, float y, float z);
+void omGenscale4(mat4 data, float x, float y, float z);
+
 void transpose4(mat4 data, mat4);
-void multiply4(mat4 , mat4, mat4);
+void multiply4m4(mat4 , mat4, mat4);
+void multiply4f(mat4 , float , mat4);
+void adjugate4(mat4 , mat4 );
+void copy4t4(mat4 , mat4);
+void inverse4(mat4, mat4);
+
 
 float det2(mat2, float *);
 float det3(mat3, float *);
@@ -32,7 +42,7 @@ void printMatrix(enum type , ...);
  * 
  * @example translate(dat, .4, -.3f, .0f) ; Moves each vertex a little bit into the right and some into the bottom
  */
-void translate4(mat4 data, float x, float y, float z) {
+void omGentranslate4(mat4 data, float x, float y, float z) {
 
     // Init Coords
     data[0][0] = 1.0f;
@@ -58,7 +68,7 @@ void translate4(mat4 data, float x, float y, float z) {
  * 
  * @note If you want to scale a geometry linearly, set x=y=z=f With f is the factor of scaling
  */
-void multiply4(mat4 res, mat4 b, mat4 a) {
+void multiply4m4(mat4 res, mat4 b, mat4 a) {
     for(size_t i = 0; i < 4; ++i) 
         for(size_t j = 0; j < 4; ++j) 
             res[i][j] = b[0][i]*a[0][j] + b[1][i] * a[1][j] + b[2][i]*a[2][i] + b[3][i] * a[3][j];
@@ -77,7 +87,7 @@ void multiply4(mat4 res, mat4 b, mat4 a) {
  * 
  * @note If you want to scale a geometry linearly, set x=y=z=f With f is the factor of scaling
  */
-void scale4(mat4 data, float x, float y, float z) {
+void omGenscale4(mat4 data, float x, float y, float z) {
 
     if(x*y*z == 0.0f) 
         printf("Warning: One Of Your Scaling Factors Is 0 .\n");    
