@@ -71,7 +71,7 @@ void omGentranslate4(mat4 data, float x, float y, float z) {
 void multiply4m4(mat4 res, mat4 b, mat4 a) {
     for(size_t i = 0; i < 4; ++i) 
         for(size_t j = 0; j < 4; ++j) 
-            res[i][j] = b[0][i]*a[0][j] + b[1][i] * a[1][j] + b[2][i]*a[2][i] + b[3][i] * a[3][j];
+            res[i][j] = a[0][i] * b[0][j] + a[1][i] * b[1][j] + a[2][i] * b[2][j] + a[3][i] * b[3][j];
 
     
 }
