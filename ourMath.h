@@ -1,6 +1,6 @@
 # include <stdio.h>
 # include <stdarg.h>
-
+# include <math.h>
 
 typedef float mat3[3][3]; // Matrices Type
 typedef float mat4[4][4];
@@ -13,8 +13,9 @@ typedef float vec4[4];
 enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
 
 
-void omGentranslate4(mat4 data, float x, float y, float z);
-void omGenscale4(mat4 data, float x, float y, float z);
+void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
+void omGenScale4(mat4 data, float x, float y, float z, char rowMajor);
+void omGenRotation4(mat4 data, float x, float y, float z, char);
 
 void transpose4(mat4 data, mat4);
 void multiply4m4(mat4 , mat4, mat4);
@@ -33,16 +34,17 @@ void printMatrix(enum type , ...);
 
 /**
  * @name Translate Matrix
- * @brief Generates A Translation Matrix And Stores It In `data`, the generated matrix is in row-major order, therefor `transpose` in glUniformMatrix...() must be GL_TRUE
+ * @brief Generates A Translation Matrix And Stores It In `data`,
  * 
  * @param data where the matrix is to be stored. needs to be filled with .0f
  * @param x translation value on the x-axis
  * @param y translation valur on the y-axis
  * @param z translation value on the z-axis
+ * @param rowMajor Specifies How The Outputed Matrix Should Be Presented. Influences parameter `transpose` in glUniformMatrix...()
  * 
  * @example translate(dat, .4, -.3f, .0f) ; Moves each vertex a little bit into the right and some into the bottom
  */
-void omGentranslate4(mat4 data, float x, float y, float z) {
+void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
 
     // Init Coords
     data[0][0] = 1.0f;
@@ -56,7 +58,63 @@ void omGentranslate4(mat4 data, float x, float y, float z) {
     data[1][3] = y;
     data[2][3] = z;
 
+    if(!rowMajor)
+        transpose4(data, NULL);
 };
+
+/**
+ * @brief Generates A Rotation Matrix In CounterClockWise;
+ * 
+ * @param data Wheee The Matrix Is To Be Stored
+ * @param x Degrees Around The X-Axis (In Rad)
+ * @param y Degrees Around The Y-Axis (In Rad)
+ * @param z Degrees Around The Z-Axis (In Rad)
+ * @param rowMajor Specifies How The Outputed Matrix Should Be Presented. Influences parameter `transpose` in glUniformMatrix...()
+ */
+void omGenRotation4(mat4 data, float x, float y, float z, char isRowMajor) {
+    // Around Z Axis 
+    mat4 zData = { .0f };
+    zData[0][0] = cos(z);
+    zData[0][1] = -sin(z);
+    zData[1][0] = cos(z);
+    zData[1][1] = sin(z);
+
+    zData[2][2] = 1.0f;
+    zData[3][3] = 1.0f;
+
+
+    // Around Y Axis
+    mat4 yData = { .0f };
+    yData[0][0] = cos(y);
+    yData[0][2] = sin(y);
+    yData[2][0] = -sin(y);
+    yData[2][2] = cos(y);
+
+    yData[1][1] = 1.0f;
+    yData[3][3] = 1.0f;
+
+
+    // Around X Axis
+    mat4 xData = { .0f };
+    xData[1][1] = cos(x);
+    xData[1][2] = -sin(x);
+    xData[2][1] = sin(x);
+    xData[2][2] = cos(x);
+
+    xData[0][0] = 1.0f;
+    xData[3][3] = 1.0f;
+
+
+    // Multiplication R = Rz*Ry*Rx
+    mat4 y_x = { .0f };
+    multiply4m4(y_x, yData, xData);
+    multiply4m4(data, zData, y_x);
+
+    if(!isRowMajor)
+        transpose4(data, NULL);
+}
+
+
 
 /**
  * @name Multiplication Matrix
@@ -78,17 +136,17 @@ void multiply4m4(mat4 res, mat4 b, mat4 a) {
 
 /**
  * @name Scale Matrix
- * @brief Generates A Scaling Matrix And Stores It In `data`, the generated matrix is in row-major order, therefor `transpose` in glUniformMatrix...() must be GL_TRUE.
+ * @brief Generates A Scaling Matrix And Stores It In `data`,.
  * 
  * @param data where the generated matrix is to be stored, needs to be new.
  * @param x scaling on the X-axis
  * @param y scaling on the Y-axis
  * @param z scaling on the Z-axis
+ * @param rowMajor Specifies How The Outputed Matrix Should Be Presented. Influences parameter `transpose` in glUniformMatrix...()
  * 
  * @note If you want to scale a geometry linearly, set x=y=z=f With f is the factor of scaling
  */
-void omGenscale4(mat4 data, float x, float y, float z) {
-
+void omGenScale4(mat4 data, float x, float y, float z, char rowMajor) {
     if(x*y*z == 0.0f) 
         printf("Warning: One Of Your Scaling Factors Is 0 .\n");    
     // One Of The Is Null
@@ -98,6 +156,9 @@ void omGenscale4(mat4 data, float x, float y, float z) {
     data[1][1] = y;
     data[2][2] = z;
     data[3][3] = 1.0f;
+
+    if(rowMajor != 1)
+        transpose4(data, NULL);
 }
 
 
