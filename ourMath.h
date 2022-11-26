@@ -123,7 +123,7 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
 
 /**
  * @name Multiplication Matrix
- * @brief Multiplies Matrix A by Matrix B and stores the result in Matrix C, basically : [ C = BA ]. The Outputed Matrix `res` is in Column-Major order, therfor transpose must be GL_DALSE for glUniformMatrix..()
+ * @brief Multiplies Matrix A by Matrix B and stores the result in Matrix C, basically : [ C = BA ]. The Outputed Matrix `res` is in Column-Major order, therfor transpose must be GL_FALSE for glUniformMatrix..()
  * 
  * @param res The Resultin Matrix
  * @param a Matrix A as In res = BA
@@ -436,3 +436,33 @@ void printMatrix(enum type tp, ...) {
 
     va_end(arg);
 }
+
+
+
+
+/**
+ * @brief Generates An Orthographic Projection Matrix. 
+ * 
+ * @param data The Matrix Where Result Is To Be Stored
+ * @param position The Position of The Bottom-Right-Near Corner Of The Cube. (X, Y, Z) order
+ * @param size The Size Of The Cube (X:W, Y:H, Z:Z)
+ * @param isRowMajor Specify If The Cube Needs To Be Trasposed.
+ */
+void omGenOrthographicProjection(mat4 data, vec3 position, vec3 size, char isRowMajor) {
+    mat4 translateToCenter = { .0f };
+    translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
+    translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
+    translateToCenter[1][3] = -(2 * position[1] + size[1]) / 2.0f;
+    translateToCenter[2][3] = -(2 * position[2] + size[2]) / 2.0f;
+
+    mat4 scaleToStd = { .0f };
+    scaleToStd[0][0] = 2.0f / size[0];
+    scaleToStd[1][1] = 2.0f / size[1];
+    scaleToStd[2][2] = 2.0f / size[2];
+    scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
+
+    multiply4m4(data, scaleToStd, translateToCenter);
+    if(!isRowMajor)
+        transpose4(data, NULL);
+}
+
