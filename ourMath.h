@@ -11,7 +11,7 @@ typedef float vec3[3];
 typedef float vec4[4];
 
 enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
-
+enum params {ROW_MAJOR=0x1, COUNTER_CLOCKE_WISE=2};
 
 void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
 void omGenScale4(mat4 data, float x, float y, float z, char rowMajor);
@@ -69,9 +69,14 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
  * @param x Degrees Around The X-Axis (In Rad)
  * @param y Degrees Around The Y-Axis (In Rad)
  * @param z Degrees Around The Z-Axis (In Rad)
- * @param rowMajor Specifies How The Outputed Matrix Should Be Presented. Influences parameter `transpose` in glUniformMatrix...()
+ * @param Parameters Supports Two Bitfields, As Of Now : + COUNTER_CLOCK_WISE if set the rotation will be counter clock wise\
+ *                    + ROW_MAJOR if the returned value should be row major or column major
  */
-void omGenRotation4(mat4 data, float x, float y, float z, char isRowMajor) {
+
+void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
+    if(!(Parameters & COUNTER_CLOCKE_WISE))
+        z = 2*M_PI - z, x = 2*M_PI - x, y = 2*M_PI - y;
+    
     // Around Z Axis 
     mat4 zData = { .0f };
     zData[0][0] = cos(z);
@@ -110,7 +115,7 @@ void omGenRotation4(mat4 data, float x, float y, float z, char isRowMajor) {
     multiply4m4(y_x, yData, xData);
     multiply4m4(data, zData, y_x);
 
-    if(!isRowMajor)
+    if(!(Parameters & ROW_MAJOR))
         transpose4(data, NULL);
 }
 
