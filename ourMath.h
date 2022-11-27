@@ -24,6 +24,9 @@ void adjugate4(mat4 , mat4 );
 void copy4t4(mat4 , mat4);
 void inverse4(mat4, mat4);
 
+void omGenOrthographicProj(mat4, vec3, vec3, char);
+void omGenPerspectiveProjFrus(mat4, vec3 , vec2 , vec3 , char);
+
 
 float det2(mat2, float *);
 float det3(mat3, float *);
@@ -448,7 +451,7 @@ void printMatrix(enum type tp, ...) {
  * @param size The Size Of The Cube (X:W, Y:H, Z:Z)
  * @param isRowMajor Specify If The Cube Needs To Be Trasposed.
  */
-void omGenOrthographicProjection(mat4 data, vec3 position, vec3 size, char isRowMajor) {
+void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
     mat4 translateToCenter = { .0f };
     translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
     translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
@@ -465,4 +468,51 @@ void omGenOrthographicProjection(mat4 data, vec3 position, vec3 size, char isRow
     if(!isRowMajor)
         transpose4(data, NULL);
 }
+/**
+ * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
+ * 
+ * @param x the float of which the absolute value is to be calculated,
+ * @return float result absolut value.
+ */
+float absf(float x) {
+    return (x >= 0) ? x : -x;
+}
 
+/**
+ * @brief Generates A Perspective Projection Matrix Based On A Given Frustrum
+ * 
+ * @param data The Matrix Where Results Are To Be Stored
+ * @param NPos The 3D Coordinates Of The Center Of The Near Plane Of Frustrum
+ * @param NSize The 2D Coordinates (X:Height, Y:Width) Of Near Plane Of The Frustrum.
+ * @param FPos The 3D Coordinates Of The Far Plane Of The Frustrum
+ * @param isRowMajor If To Transpose The Results
+ */
+void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char isRowMajor) {
+    if(FPos[2] == NPos[2]) {
+        printf("Error : Far Plane == Near Plane \n");
+        return ;
+    }
+    mat4 PerData = {.0f};
+    vec2 FSize = {
+        FPos[2] * NSize[0] / NPos[2],
+        FPos[2] * NSize[1] / NPos[2],
+    };
+
+
+    PerData[0][0] = NPos[2];
+    PerData[1][1] = NPos[2];
+    PerData[2][2] = NPos[2] + FPos[2];
+    PerData[2][3] = - NPos[2] * FPos[2];
+    PerData[3][2] = 1.0f;
+
+    mat4 orthProj = { .0f };
+    omGenOrthographicProj(orthProj,
+        (vec3) {NPos[0] - NSize[0] / 2.0f, NPos[1] - NSize[1] / 2.0f, NPos[2] - NSize[2] / 2.0f}, 
+        (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
+        1
+    );
+
+    multiply4m4(data, orthProj, PerData);
+    if(!isRowMajor)
+        transpose4(data, NULL);
+}
