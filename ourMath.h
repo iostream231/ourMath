@@ -516,3 +516,13 @@ void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char 
     if(!isRowMajor)
         transpose4(data, NULL);
 }
+
+
+void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
+    vec2 farSize = { 
+        
+        2 * tan(POV[0]) * absf(eye[2] - center[2]),
+    }
+        
+    
+};
