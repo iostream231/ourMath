@@ -11,7 +11,7 @@ typedef float vec3[3];
 typedef float vec4[4];
 
 enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
-enum params {ROW_MAJOR=0x1, COUNTER_CLOCKE_WISE=2};
+enum params {ROW_MAJOR=0x1, REVERSE=2};
 
 void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
 void omGenScale4(mat4 data, float x, float y, float z, char rowMajor);
@@ -72,12 +72,12 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
  * @param x Degrees Around The X-Axis (In Rad)
  * @param y Degrees Around The Y-Axis (In Rad)
  * @param z Degrees Around The Z-Axis (In Rad)
- * @param Parameters Supports Two Bitfields, As Of Now : + COUNTER_CLOCK_WISE if set the rotation will be counter clock wise\
+ * @param Parameters Supports Two Bitfields, As Of Now : + REVERSE If You Didn't Like The DIrection You Can Reverse The Rotation Angle (Like CCW && CW) \
  *                    + ROW_MAJOR if the returned value should be row major or column major
  */
 
 void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
-    if(!(Parameters & COUNTER_CLOCKE_WISE))
+    if(!(Parameters & REVERSE))
         z = 2*M_PI - z, x = 2*M_PI - x, y = 2*M_PI - y;
     
     // Around Z Axis 
@@ -94,8 +94,8 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
     // Around Y Axis
     mat4 yData = { .0f };
     yData[0][0] = cos(y);
-    yData[0][2] = sin(y);
-    yData[2][0] = -sin(y);
+    yData[0][2] = -sin(y);
+    yData[2][0] = sin(y);
     yData[2][2] = cos(y);
 
     yData[1][1] = 1.0f;
@@ -137,7 +137,7 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
 void multiply4m4(mat4 res, mat4 b, mat4 a) {
     for(size_t i = 0; i < 4; ++i) 
         for(size_t j = 0; j < 4; ++j) 
-            res[i][j] = a[0][i] * b[0][j] + a[1][i] * b[1][j] + a[2][i] * b[2][j] + a[3][i] * b[3][j];
+            res[i][j] = b[i][0] * a[0][j] + b[i][1] * a[1][j] + b[i][2] * a[2][j] + b[i][3] * a[3][j];
 
     
 }
@@ -444,85 +444,85 @@ void printMatrix(enum type tp, ...) {
 
 
 /**
- * @brief Generates An Orthographic Projection Matrix. 
- * 
- * @param data The Matrix Where Result Is To Be Stored
- * @param position The Position of The Bottom-Right-Near Corner Of The Cube. (X, Y, Z) order
- * @param size The Size Of The Cube (X:W, Y:H, Z:Z)
- * @param isRowMajor Specify If The Cube Needs To Be Trasposed.
- */
-void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
-    mat4 translateToCenter = { .0f };
-    translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
-    translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
-    translateToCenter[1][3] = -(2 * position[1] + size[1]) / 2.0f;
-    translateToCenter[2][3] = -(2 * position[2] + size[2]) / 2.0f;
+//  * @brief Generates An Orthographic Projection Matrix. 
+//  * 
+//  * @param data The Matrix Where Result Is To Be Stored
+//  * @param position The Position of The Bottom-Right-Near Corner Of The Cube. (X, Y, Z) order
+//  * @param size The Size Of The Cube (X:W, Y:H, Z:Z)
+//  * @param isRowMajor Specify If The Cube Needs To Be Trasposed.
+//  */
+// void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
+//     mat4 translateToCenter = { .0f };
+//     translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
+//     translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
+//     translateToCenter[1][3] = -(2 * position[1] + size[1]) / 2.0f;
+//     translateToCenter[2][3] = -(2 * position[2] + size[2]) / 2.0f;
 
-    mat4 scaleToStd = { .0f };
-    scaleToStd[0][0] = 2.0f / size[0];
-    scaleToStd[1][1] = 2.0f / size[1];
-    scaleToStd[2][2] = 2.0f / size[2];
-    scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
+//     mat4 scaleToStd = { .0f };
+//     scaleToStd[0][0] = 2.0f / size[0];
+//     scaleToStd[1][1] = 2.0f / size[1];
+//     scaleToStd[2][2] = 2.0f / size[2];
+//     scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
 
-    multiply4m4(data, scaleToStd, translateToCenter);
-    if(!isRowMajor)
-        transpose4(data, NULL);
-}
-/**
- * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
- * 
- * @param x the float of which the absolute value is to be calculated,
- * @return float result absolut value.
- */
-float absf(float x) {
-    return (x >= 0) ? x : -x;
-}
+//     multiply4m4(data, scaleToStd, translateToCenter);
+//     if(!isRowMajor)
+//         transpose4(data, NULL);
+// }
+// /**
+//  * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
+//  * 
+//  * @param x the float of which the absolute value is to be calculated,
+//  * @return float result absolut value.
+//  */
+// float absf(float x) {
+//     return (x >= 0) ? x : -x;
+// }
 
-/**
- * @brief Generates A Perspective Projection Matrix Based On A Given Frustrum
- * 
- * @param data The Matrix Where Results Are To Be Stored
- * @param NPos The 3D Coordinates Of The Center Of The Near Plane Of Frustrum
- * @param NSize The 2D Coordinates (X:Height, Y:Width) Of Near Plane Of The Frustrum.
- * @param FPos The 3D Coordinates Of The Far Plane Of The Frustrum
- * @param isRowMajor If To Transpose The Results
- */
-void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char isRowMajor) {
-    if(FPos[2] == NPos[2]) {
-        printf("Error : Far Plane == Near Plane \n");
-        return ;
-    }
-    mat4 PerData = {.0f};
-    vec2 FSize = {
-        FPos[2] * NSize[0] / NPos[2],
-        FPos[2] * NSize[1] / NPos[2],
-    };
-
-
-    PerData[0][0] = NPos[2];
-    PerData[1][1] = NPos[2];
-    PerData[2][2] = NPos[2] + FPos[2];
-    PerData[2][3] = - NPos[2] * FPos[2];
-    PerData[3][2] = 1.0f;
-
-    mat4 orthProj = { .0f };
-    omGenOrthographicProj(orthProj,
-        (vec3) {NPos[0] - NSize[0] / 2.0f, NPos[1] - NSize[1] / 2.0f, NPos[2] - NSize[2] / 2.0f}, 
-        (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
-        1
-    );
-
-    multiply4m4(data, orthProj, PerData);
-    if(!isRowMajor)
-        transpose4(data, NULL);
-}
+// /**
+//  * @brief Generates A Perspective Projection Matrix Based On A Given Frustrum
+//  * 
+//  * @param data The Matrix Where Results Are To Be Stored
+//  * @param NPos The 3D Coordinates Of The Center Of The Near Plane Of Frustrum
+//  * @param NSize The 2D Coordinates (X:Height, Y:Width) Of Near Plane Of The Frustrum.
+//  * @param FPos The 3D Coordinates Of The Far Plane Of The Frustrum
+//  * @param isRowMajor If To Transpose The Results
+//  */
+// void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char isRowMajor) {
+//     if(FPos[2] == NPos[2]) {
+//         printf("Error : Far Plane == Near Plane \n");
+//         return ;
+//     }
+//     mat4 PerData = {.0f};
+//     vec2 FSize = {
+//         FPos[2] * NSize[0] / NPos[2],
+//         FPos[2] * NSize[1] / NPos[2],
+//     };
 
 
-void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
-    vec2 farSize = { 
+//     PerData[0][0] = NPos[2];
+//     PerData[1][1] = NPos[2];
+//     PerData[2][2] = NPos[2] + FPos[2];
+//     PerData[2][3] = - NPos[2] * FPos[2];
+//     PerData[3][2] = 1.0f;
+
+//     mat4 orthProj = { .0f };
+//     omGenOrthographicProj(orthProj,
+//         (vec3) {NPos[0] - NSize[0] / 2.0f, NPos[1] - NSize[1] / 2.0f, NPos[2] - NSize[2] / 2.0f}, 
+//         (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
+//         1
+//     );
+
+//     multiply4m4(data, orthProj, PerData);
+//     if(!isRowMajor)
+//         transpose4(data, NULL);
+// }
+
+
+// void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
+//     vec2 farSize = { 
         
-        2 * tan(POV[0]) * absf(eye[2] - center[2]),
-    }
+//         2 * tan(POV[0]) * absf(eye[2] - center[2]),
+//     }
         
     
-};
+// };
