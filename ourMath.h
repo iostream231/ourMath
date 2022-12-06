@@ -17,19 +17,19 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
 void omGenScale4(mat4 data, float x, float y, float z, char rowMajor);
 void omGenRotation4(mat4 data, float x, float y, float z, char);
 
-void transpose4(mat4 data, mat4);
-void multiply4m4(mat4 , mat4, mat4);
-void multiply4f(mat4 , float , mat4);
-void adjugate4(mat4 , mat4 );
-void copy4t4(mat4 , mat4);
-void inverse4(mat4, mat4);
+void omTranspose4m(mat4 data, mat4);
+void omMultiply4m4(mat4 , mat4, mat4);
+void omMultiply4f(mat4 , float , mat4);
+void omadjugate4m4(mat4 , mat4 );
+void omCopy4t4(mat4 , mat4);
+void omInverse4(mat4, mat4);
 
 void omGenOrthographicProj(mat4, vec3, vec3, char);
 void omGenPerspectiveProjFrus(mat4, vec3 , vec2 , vec3 , char);
 
 
-float det2(mat2, float *);
-float det3(mat3, float *);
+float omDet2(mat2, float *);
+float omDet3(mat3, float *);
 
 
 void printMatrix(enum type , ...);
@@ -61,8 +61,8 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
     data[1][3] = y;
     data[2][3] = z;
 
-    if(!rowMajor)
-        transpose4(data, NULL);
+    if(rowMajor)
+        omTranspose4m(data, NULL);
 };
 
 /**
@@ -115,11 +115,11 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
 
     // Multiplication R = Rz*Ry*Rx
     mat4 y_x = { .0f };
-    multiply4m4(y_x, yData, xData);
-    multiply4m4(data, zData, y_x);
+    omMultiply4m4(y_x, yData, xData);
+    omMultiply4m4(data, zData, y_x);
 
     if((Parameters & OM_ROW_MAJOR))
-        transpose4(data, NULL);
+        omTranspose4m(data, NULL);
 }
 
 
@@ -134,7 +134,7 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
  * 
  * @note If you want to scale a geometry linearly, set x=y=z=f With f is the factor of scaling
  */
-void multiply4m4(mat4 res, mat4 b, mat4 a) {
+void omMultiply4m4(mat4 res, mat4 b, mat4 a) {
     for(size_t i = 0; i < 4; ++i) 
         for(size_t j = 0; j < 4; ++j) 
             res[i][j] = b[i][0] * a[0][j] + b[i][1] * a[1][j] + b[i][2] * a[2][j] + b[i][3] * a[3][j];
@@ -165,8 +165,8 @@ void omGenScale4(mat4 data, float x, float y, float z, char rowMajor) {
     data[2][2] = z;
     data[3][3] = 1.0f;
 
-    if(rowMajor != 1)
-        transpose4(data, NULL);
+    if(rowMajor)
+        omTranspose4m(data, NULL);
 }
 
 
@@ -175,12 +175,12 @@ void omGenScale4(mat4 data, float x, float y, float z, char rowMajor) {
  * @brief Calculates The Determinant of a 2D Column-Majored Matrix.
  * 
  * @param data The Matrix that its determinant is to be calculated
- * @param det2 A Pointer to a float value where the determinent is to be saved. Can be NULL if not necessary.
+ * @param omDet2 A Pointer to a float value where the determinent is to be saved. Can be NULL if not necessary.
  * @return float Returns The Determinant
  */
-float det2(mat2 data, float * det2) {
+float omDet2(mat2 data, float * omDet2) {
 
-     return det2 != NULL ? (*det2 = data[0][0] * data[1][1] - data[0][1] * data[1][0]) : data[0][0] * data[1][1] - data[0][1] * data[1][0];
+     return omDet2 != NULL ? (*omDet2 = data[0][0] * data[1][1] - data[0][1] * data[1][0]) : data[0][0] * data[1][1] - data[0][1] * data[1][0];
     
 }
 
@@ -188,10 +188,10 @@ float det2(mat2 data, float * det2) {
  * @brief Calculates the Determinenet of a 3D Column-Majored Matrix;
  * 
  * @param data The 3x3 Column-Majored Matrix that its data is to be calculated
- * @param det3 A Pointer to a float value where the determinent is to be saved. Can be NULL if not necessary.
+ * @param omDet3 A Pointer to a float value where the determinent is to be saved. Can be NULL if not necessary.
  * @return float Returns The Determinant
  */
-float det3(mat3 data, float * det3) {
+float omDet3(mat3 data, float * omDet3) {
     mat2 matrix1 = {
         {data[1][1], data[1][2]},
         {data[2][1], data[2][2]}
@@ -205,15 +205,15 @@ float det3(mat3 data, float * det3) {
         {data[2][0], data[2][1]}
     };
 
-    return (det3 != NULL) ? (*det3 = data[0][0]*det2(matrix1, NULL) - data[0][1]*  det2(matrix2, NULL) + data[0][2]*  det2(matrix3, NULL)) \
-    :  data[0][0]*det2(matrix1, NULL) - data[0][1] * det2(matrix2, NULL) + data[0][2] * det2(matrix3, NULL);
+    return (omDet3 != NULL) ? (*omDet3 = data[0][0]*omDet2(matrix1, NULL) - data[0][1]*  omDet2(matrix2, NULL) + data[0][2]*  omDet2(matrix3, NULL)) \
+    :  data[0][0]*omDet2(matrix1, NULL) - data[0][1] * omDet2(matrix2, NULL) + data[0][2] * omDet2(matrix3, NULL);
 }
 
 
 
 // * Supposed to be a mpre optimized function, but clearly has no effect.
-// float det3Opt(mat3 data, float * det3) {
-//     return (det3 != NULL) ? (*det3 = (data[0][0] * (data[1][1] * data[2][2] - data[1][2] * data[2][1])) \
+// float det3Opt(mat3 data, float * omDet3) {
+//     return (omDet3 != NULL) ? (*omDet3 = (data[0][0] * (data[1][1] * data[2][2] - data[1][2] * data[2][1])) \
 //         - (data[0][1] * (data[1][1] * data[2][2] - data[1][2] * data[2][0])\
 //         + (data[0][2] * (data[1][0] * data[2][1] - data[1][1] * data[2][0])))) : \
 //         (data[0][0] * (data[1][1] * data[2][2] - data[1][2] * data[2][1])) \
@@ -255,8 +255,8 @@ float det4(mat4 data, float * det4){
         {data[3][0], data[3][1], data[3][2]}
     };
 
-    return (det4 != NULL) ? (*det4 = data[0][0]*det3(matrix1, NULL) - data[0][1]*det3(matrix2, NULL) + data[0][2]*det3(matrix3, NULL) - data[0][3]*det3(matrix4, NULL)) \
-    : (data[0][0]*det3(matrix1, NULL) - data[0][1]*det3(matrix2, NULL) + data[0][2]*det3(matrix3, NULL) - data[0][3]*det3(matrix4, NULL));
+    return (det4 != NULL) ? (*det4 = data[0][0]*omDet3(matrix1, NULL) - data[0][1]*omDet3(matrix2, NULL) + data[0][2]*omDet3(matrix3, NULL) - data[0][3]*omDet3(matrix4, NULL)) \
+    : (data[0][0]*omDet3(matrix1, NULL) - data[0][1]*omDet3(matrix2, NULL) + data[0][2]*omDet3(matrix3, NULL) - data[0][3]*omDet3(matrix4, NULL));
 }
 
 /**
@@ -286,7 +286,7 @@ char * remIndFromLst(char lst[], uint ind, uint sz) {
  * @param res The Matrix Where The Adjunct is to be stored.
  * @param data The Matrix That's Adjunct is to be calculated.
  */
-void adjugate(mat4 res, mat4 data) {
+void omadjugate4m4(mat4 res, mat4 data) {
 
     char indices[4] = {0, 1, 2, 3};
 
@@ -301,11 +301,11 @@ void adjugate(mat4 res, mat4 data) {
                 { data[Cdices[2]][Rdices[0]], data[Cdices[2]][Rdices[1]], data[Cdices[2]][Rdices[2]] }
             };
 
-            res[i][j] = (i + j) % 2 == 0 ? det3(matrix, NULL) : -det3(matrix, NULL);
+            res[i][j] = (i + j) % 2 == 0 ? omDet3(matrix, NULL) : -omDet3(matrix, NULL);
 
         }
     }
-    transpose4(res, NULL);
+    omTranspose4m(res, NULL);
 }
 
 /**
@@ -315,7 +315,7 @@ void adjugate(mat4 res, mat4 data) {
  * @param f the value to multiply the matrix by.
  * @param res Optional (Can Be NULL), if you want data to not change you can store the results in another independent matrix by passing it here.
  */
-void multiply4f(mat4 data, float f, mat4 res) {
+void omMultiply4f(mat4 data, float f, mat4 res) {
     if(res == NULL) 
         for(size_t i = 0; i < 4; ++i) 
             for(size_t j = 0; j < 4; ++j)
@@ -334,7 +334,7 @@ void multiply4f(mat4 data, float f, mat4 res) {
  * @param from The 4D Matrix to be copied from.
  * @param to The 4D Matrix To be copied to.
  */
-void copy4t4(mat4 from, mat4 to) {
+void omCopy4t4(mat4 from, mat4 to) {
     for(size_t i = 0; i < 4; ++i) 
         for(size_t j = 0; j < 4; ++j)
             to[i][j] = from[i][j];
@@ -348,17 +348,17 @@ void copy4t4(mat4 from, mat4 to) {
  * @param data The Matrix That's Inverse Is To Be Calculated
  * @param res Where To Store the Inversed matrix, if not specified `data` will be changed to store the inversed matrix
  */
-void inverse4(mat4 data, mat4 res) {
+void omInverse4(mat4 data, mat4 res) {
     mat4 adj = {.0f};
-    adjugate(adj, data);
+    omadjugate4m4(adj, data);
 
     
-    multiply4f(adj, (1.0f / det4(data, NULL)), NULL);
+    omMultiply4f(adj, (1.0f / det4(data, NULL)), NULL);
 
     if(res != NULL) 
-        copy4t4(adj, res);
+        omCopy4t4(adj, res);
     else 
-        copy4t4(adj, data);
+        omCopy4t4(adj, data);
 }
 
 /**
@@ -367,13 +367,13 @@ void inverse4(mat4 data, mat4 res) {
  * @param data The Matrix To Be Transposed, if you dont want to Modify it you need to specify a `res` matrix where transposed data is to be stored.
  * @param res The Result Matrix Where The Transposed Matrix is to be stored. If specified as NULL, the main matrix is modified
  */
-void transpose4(mat4 data, mat4 res) {
+void omTranspose4m(mat4 data, mat4 res) {
     if(res == NULL) {
         mat4 matx = {.0f};
         for(size_t i = 0; i < 4; ++i) 
             for(size_t j = 0; j < 4; ++j)
                 matx[j][i] = data[i][j];
-        copy4t4(matx, data);
+        omCopy4t4(matx, data);
         return ;
     } else 
         for(size_t i = 0; i < 4; ++i) 
@@ -464,9 +464,9 @@ void printMatrix(enum type tp, ...) {
 //     scaleToStd[2][2] = 2.0f / size[2];
 //     scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
 
-//     multiply4m4(data, scaleToStd, translateToCenter);
-//     if(!isRowMajor)
-//         transpose4(data, NULL);
+//     omMultiply4m4(data, scaleToStd, translateToCenter);
+//     if(isRowMajor)
+//         omTranspose4m(data, NULL);
 // }
 // /**
 //  * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
@@ -512,9 +512,9 @@ void printMatrix(enum type tp, ...) {
 //         1
 //     );
 
-//     multiply4m4(data, orthProj, PerData);
-//     if(!isRowMajor)
-//         transpose4(data, NULL);
+//     omMultiply4m4(data, orthProj, PerData);
+//     if(isRowMajor)
+//         omTranspose4m(data, NULL);
 // }
 
 
