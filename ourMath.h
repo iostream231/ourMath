@@ -11,7 +11,7 @@ typedef float vec3[3];
 typedef float vec4[4];
 
 enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
-enum params {ROW_MAJOR=0x1, REVERSE=2};
+enum params {OM_ROW_MAJOR=0x1, OM_REVERSE=2};
 
 void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
 void omGenScale4(mat4 data, float x, float y, float z, char rowMajor);
@@ -77,15 +77,15 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
  */
 
 void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
-    if(!(Parameters & REVERSE))
+    if(!(Parameters & OM_REVERSE))
         z = 2*M_PI - z, x = 2*M_PI - x, y = 2*M_PI - y;
     
     // Around Z Axis 
     mat4 zData = { .0f };
     zData[0][0] = cos(z);
     zData[0][1] = -sin(z);
-    zData[1][0] = cos(z);
-    zData[1][1] = sin(z);
+    zData[1][0] = sin(z);
+    zData[1][1] = cos(z);
 
     zData[2][2] = 1.0f;
     zData[3][3] = 1.0f;
@@ -94,8 +94,8 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
     // Around Y Axis
     mat4 yData = { .0f };
     yData[0][0] = cos(y);
-    yData[0][2] = -sin(y);
-    yData[2][0] = sin(y);
+    yData[0][2] = sin(y);
+    yData[2][0] = -sin(y);
     yData[2][2] = cos(y);
 
     yData[1][1] = 1.0f;
@@ -118,7 +118,7 @@ void omGenRotation4(mat4 data, float x, float y, float z, char Parameters) {
     multiply4m4(y_x, yData, xData);
     multiply4m4(data, zData, y_x);
 
-    if(!(Parameters & ROW_MAJOR))
+    if((Parameters & OM_ROW_MAJOR))
         transpose4(data, NULL);
 }
 
