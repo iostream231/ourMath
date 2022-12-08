@@ -451,32 +451,32 @@ void printMatrix(enum type tp, ...) {
 //  * @param size The Size Of The Cube (X:W, Y:H, Z:Z)
 //  * @param isRowMajor Specify If The Cube Needs To Be Trasposed.
 //  */
-// void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
-//     mat4 translateToCenter = { .0f };
-//     translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
-//     translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
-//     translateToCenter[1][3] = -(2 * position[1] + size[1]) / 2.0f;
-//     translateToCenter[2][3] = -(2 * position[2] + size[2]) / 2.0f;
+void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
+    mat4 translateToCenter = { .0f };
+    translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
+    translateToCenter[0][3] = -(2 * position[0] + size[0]) / 2.0f;
+    translateToCenter[1][3] = -(2 * position[1] + size[1]) / 2.0f;
+    translateToCenter[2][3] = -(2 * position[2] + size[2]) / 2.0f;
 
-//     mat4 scaleToStd = { .0f };
-//     scaleToStd[0][0] = 2.0f / size[0];
-//     scaleToStd[1][1] = 2.0f / size[1];
-//     scaleToStd[2][2] = 2.0f / size[2];
-//     scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
+    mat4 scaleToStd = { .0f };
+    scaleToStd[0][0] = 2.0f / size[0];
+    scaleToStd[1][1] = 2.0f / size[1];
+    scaleToStd[2][2] = 2.0f / size[2];
+    scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
 
-//     omMultiply4m4(data, scaleToStd, translateToCenter);
-//     if(isRowMajor)
-//         omTranspose4m(data, NULL);
-// }
-// /**
-//  * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
-//  * 
-//  * @param x the float of which the absolute value is to be calculated,
-//  * @return float result absolut value.
-//  */
-// float absf(float x) {
-//     return (x >= 0) ? x : -x;
-// }
+    omMultiply4m4(data, scaleToStd, translateToCenter);
+    if(isRowMajor)
+        omTranspose4m(data, NULL);
+}
+/**
+ * @brief The Absolute Value Of A Float (IDK why math.h version only supports ints...)
+ * 
+ * @param x the float of which the absolute value is to be calculated,
+ * @return float result absolut value.
+ */
+float absf(float x) {
+    return (x >= 0) ? x : -x;
+}
 
 // /**
 //  * @brief Generates A Perspective Projection Matrix Based On A Given Frustrum
@@ -484,45 +484,67 @@ void printMatrix(enum type tp, ...) {
 //  * @param data The Matrix Where Results Are To Be Stored
 //  * @param NPos The 3D Coordinates Of The Center Of The Near Plane Of Frustrum
 //  * @param NSize The 2D Coordinates (X:Height, Y:Width) Of Near Plane Of The Frustrum.
-//  * @param FPos The 3D Coordinates Of The Far Plane Of The Frustrum
+//  * @param FPos The 3D Coordinates Of The Center Of The Far Plane Of The Frustrum
 //  * @param isRowMajor If To Transpose The Results
 //  */
-// void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char isRowMajor) {
-//     if(FPos[2] == NPos[2]) {
-//         printf("Error : Far Plane == Near Plane \n");
-//         return ;
-//     }
-//     mat4 PerData = {.0f};
-//     vec2 FSize = {
-//         FPos[2] * NSize[0] / NPos[2],
-//         FPos[2] * NSize[1] / NPos[2],
-//     };
+void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char isRowMajor) {
+    if(FPos[2] == NPos[2]) {
+        printf("Error : Far Plane == Near Plane \n");
+        return ;
+    }
+    mat4 PerData = {.0f};
+    vec2 FSize = {
+        FPos[2] * NSize[0] / NPos[2],
+        FPos[2] * NSize[1] / NPos[2],
+    };
 
 
-//     PerData[0][0] = NPos[2];
-//     PerData[1][1] = NPos[2];
-//     PerData[2][2] = NPos[2] + FPos[2];
-//     PerData[2][3] = - NPos[2] * FPos[2];
-//     PerData[3][2] = 1.0f;
+    PerData[0][0] = NPos[2];
+    PerData[1][1] = NPos[2];
+    PerData[2][2] = NPos[2] + FPos[2];
+    PerData[2][3] = - NPos[2] * FPos[2];
+    PerData[3][2] = 1.0f;
 
-//     mat4 orthProj = { .0f };
-//     omGenOrthographicProj(orthProj,
-//         (vec3) {NPos[0] - NSize[0] / 2.0f, NPos[1] - NSize[1] / 2.0f, NPos[2] - NSize[2] / 2.0f}, 
-//         (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
-//         1
-//     );
+    mat4 orthProj = { .0f };
+    omGenOrthographicProj(orthProj,
+        (vec3) {NPos[0] - NSize[0] / 2.0f, NPos[1] - NSize[1] / 2.0f, NPos[2] - NSize[2] / 2.0f}, 
+        (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
+        1
+    );
 
-//     omMultiply4m4(data, orthProj, PerData);
-//     if(isRowMajor)
-//         omTranspose4m(data, NULL);
-// }
+    omMultiply4m4(data, orthProj, PerData);
+    if(isRowMajor)
+        omTranspose4m(data, NULL);
+}
 
 
-// void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
-//     vec2 farSize = { 
-        
-//         2 * tan(POV[0]) * absf(eye[2] - center[2]),
-//     }
-        
+void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
+    // Find :
+    //      * NPosition
+    //      * NSize : Already Have It
+    //      * FPosition : Already Have It
+
+    vec2 FSize = { 
+        sqrt(
+            powf(center[0] - eye[0], 2) + powf(center[2] - eye[2], 2)
+        ) * 2 * tanf(POV[0] / 2.0f),
+
+        sqrt(
+            powf(center[1] - eye[1], 2) + powf(center[2] - eye[2], 2)  
+        ) * 2 * tanf(POV[1] / 2.0f),
+    };
+    if(NearSize[0] >= FSize[0] || NearSize[1] >= FSize[1]) {
+        perror("Error : Near Size Bigger Than Far Size \n");
+        exit(EXIT_FAILURE);
+    };
+
+    vec3 nearPosition ={
+        eye[0] + absf((center[0] - eye[1])*NearSize[0]/2.0f*FSize[0]),
+        eye[1] + absf((center[1] - eye[1])*NearSize[1]/2.0f*FSize[1]), 
+        eye[2] + absf((center[2] - eye[2])*NearSize[1]/2.0f*FSize[1]),
+    };
+
+    return omGenPerspectiveProjFrus(data, nearPosition, NearSize, center, isRowMajor);
     
-// };
+    
+};
