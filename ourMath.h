@@ -518,6 +518,17 @@ void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char 
 }
 
 
+
+/**
+ * @brief Generates A Perspective Projection Matrix Based On Eye Position And Center Of Look
+ * 
+ * @param data The Matrix Where The Result Is TO Be Stored
+ * @param eye The Position Of The Viewer's Eye
+ * @param center The Position Of Center Of Look
+ * @param NearSize The Size Of The Near Plane (The Window)
+ * @param POV The Point Of View, (X:Horizontal Angle, Y:Vertical Angle)
+ * @param isRowMajor The Order Of the result Matrix
+ */
 void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, vec2 POV, char isRowMajor) {
     // Find :
     //      * NPosition
