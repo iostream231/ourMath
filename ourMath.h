@@ -10,7 +10,8 @@ typedef float vec2[2];
 typedef float vec3[3];
 typedef float vec4[4];
 
-enum type {MAT2, MAT3, MAT4, VEC2, VEC3, VEC4};
+enum MatrixType {MAT2, MAT3, MAT4};
+enum VectorType {VEC2=3, VEC3, VEC4};
 enum params {OM_ROW_MAJOR=0x1, OM_REVERSE=2};
 
 void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor);
@@ -31,9 +32,7 @@ void omGenPerspectiveProjFrus(mat4, vec3 , vec2 , vec3 , char);
 float omDet2(mat2, float *);
 float omDet3(mat3, float *);
 
-
-void printMatrix(enum type , ...);
-
+void printMatrix(enum MatrixType , ...);
 
 /**
  * @name Translate Matrix
@@ -61,7 +60,7 @@ void omGenTranslate4(mat4 data, float x, float y, float z, char rowMajor) {
     data[1][3] = y;
     data[2][3] = z;
 
-    if(rowMajor)
+    if(!rowMajor)
         omTranspose4m(data, NULL);
 };
 
@@ -387,7 +386,7 @@ void omTranspose4m(mat4 data, mat4 res) {
  * @param tp The Type Of The Matrix. Current Supported Types Are MAT2, MAT3 and MAT4.
  * @param ... the matrix to be printed.
  */
-void printMatrix(enum type tp, ...) {
+void printMatrix(enum MatrixType tp, ...) {    
     va_list arg;
 
     va_start(arg, tp);
@@ -454,16 +453,18 @@ void printMatrix(enum type tp, ...) {
 //  */
 void omGenOrthographicProj(mat4 data, vec3 position, vec3 size, char isRowMajor) {
     mat4 translateToCenter = { .0f };
-    translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
-    translateToCenter[0][3] = - position[0];
-    translateToCenter[1][3] = - position[1];
-    translateToCenter[2][3] = - position[2];
+    // translateToCenter[0][0] = translateToCenter[1][1] = translateToCenter[2][2] = translateToCenter[3][3] = 1.0f;
+    // translateToCenter[0][3] = - position[0];
+    // translateToCenter[1][3] = - position[1];
+    // translateToCenter[2][3] = - position[2];
+    omGenTranslate4(translateToCenter, -position[0], -position[1], -position[2], 0);
 
     mat4 scaleToStd = { .0f };
-    scaleToStd[0][0] = 2.0f / size[0];
-    scaleToStd[1][1] = 2.0f / size[1];
-    scaleToStd[2][2] = 1.0f / size[2];
-    scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
+    // scaleToStd[0][0] = 2.0f / size[0];
+    // scaleToStd[1][1] = 2.0f / size[1];
+    // scaleToStd[2][2] = 1.0f / size[2];
+    // scaleToStd[3][3] = 1.0f;   // NOTE: This One May Cause Problems
+    omGenScale4(scaleToStd, 2.0f / size[0], 2.0f / size[1], 2.0f / size[2], 0);
 
     omMultiply4m4(data, scaleToStd, translateToCenter);
     if(isRowMajor)
@@ -496,23 +497,17 @@ void omGenPerspectiveProjFrus(mat4 data, vec3 NPos, vec2 NSize, vec3 FPos, char 
         return ;
     }
     mat4 PerData = {.0f};
-    vec2 FSize = {
-        FPos[2] * NSize[0] / NPos[2],
-        FPos[2] * NSize[1] / NPos[2],
-    };
-
-
-    PerData[0][0] = NPos[2];
-    PerData[1][1] = NPos[2];
+    PerData[0][0] = absf(NPos[2]);
+    PerData[1][1] = absf(NPos[2]);
     PerData[2][2] = NPos[2] + FPos[2];
-    PerData[2][3] = - NPos[2] * FPos[2];
+    PerData[2][3] = -(NPos[2] * FPos[2]);
     PerData[3][2] = 1.0f;
 
     mat4 orthProj = { .0f };
     omGenOrthographicProj(orthProj,
-        NPos, 
+        (vec3) {(NPos[0] + FPos[0]) / 2.0f, (NPos[1] + FPos[1]) / 2.0f, (NPos[2] + FPos[2]) / 2.0f}, 
         (vec3) {NSize[0], NSize[1], absf(FPos[2] - NPos[2])},
-        isRowMajor
+        0
     );
     omMultiply4m4(data, orthProj, PerData);
     if(isRowMajor)
@@ -565,3 +560,5 @@ void omGenPerspectiveProjEye(mat4 data, vec3 eye, vec3 center, vec2 NearSize, ve
     
     
 };
+
+
